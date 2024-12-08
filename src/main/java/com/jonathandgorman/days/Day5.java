@@ -3,10 +3,7 @@ package com.jonathandgorman.days;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Day5 {
@@ -31,25 +28,23 @@ public class Day5 {
                 ));
 
         System.out.println("The sum of the middle value of each correct update is: " + processOrderedUpdates(updatesList, groupedRules));
+        System.out.println("The sum of the middle value of each correct update is: " + processInvalidUpdates(updatesList, groupedRules));
   }
 
-    private static boolean isValidUpdate(List<Integer> update, Map<Integer, List<Integer>> groupedRules, Map<Integer, Integer> indexMap) {
-        boolean isValid = true;
+    private static Integer[] getNextFailedRule(List<Integer> update, Map<Integer, List<Integer>> groupedRules, Map<Integer, Integer> indexMap) {
         for (Integer entry : update) {
             if (groupedRules.containsKey(entry)) {
                 var mustBeAheadList = groupedRules.get(entry);
                 for (Integer aheadElement : mustBeAheadList) {
                     if (indexMap.containsKey(aheadElement)) {
                         if (indexMap.get(entry) > indexMap.get(aheadElement)) {
-                            isValid = false;
-                            break;
+                            return new Integer[]{entry, aheadElement};
                         }
                     }
                 }
             }
-            if (!isValid) break;
         }
-        return isValid;
+        return null;
     }
 
     private static int processOrderedUpdates(List<List<Integer>> updatesList, Map<Integer, List<Integer>> groupedRules) {
@@ -61,8 +56,46 @@ public class Day5 {
                 entryIndexMap.put(update.get(i), i);
             }
 
-            if (isValidUpdate(update, groupedRules, entryIndexMap)) middlePageSum += update.get(update.size() / 2);
+            if (getNextFailedRule(update, groupedRules, entryIndexMap) == null) middlePageSum += update.get(update.size() / 2);
         }
+        return middlePageSum;
+    }
+
+    private static int processInvalidUpdates(List<List<Integer>> updatesList, Map<Integer, List<Integer>> groupedRules) {
+        int middlePageSum = 0;
+
+        for (List<Integer> update : updatesList) {
+            List<Integer> mutableUpdate = new ArrayList<>(update);
+            Map<Integer, Integer> entryIndexMap = new HashMap<>();
+
+            for (int i = 0; i < mutableUpdate.size(); i++) {
+                entryIndexMap.put(mutableUpdate.get(i), i);
+            }
+
+            Integer[] failedRule = getNextFailedRule(mutableUpdate, groupedRules, entryIndexMap);
+            if (failedRule != null) {
+                while ((failedRule = getNextFailedRule(mutableUpdate, groupedRules, entryIndexMap)) != null) {
+
+                    int indexX = entryIndexMap.get(failedRule[0]);
+                    int indexY = entryIndexMap.get(failedRule[1]);
+
+                    Integer temp = mutableUpdate.get(indexX);
+                    mutableUpdate.set(indexX, mutableUpdate.get(indexY));
+                    mutableUpdate.set(indexY, temp);
+
+                    entryIndexMap.clear();
+                    for (int i = 0; i < mutableUpdate.size(); i++) {
+                        entryIndexMap.put(mutableUpdate.get(i), i);
+                    }
+
+                    if (getNextFailedRule(mutableUpdate, groupedRules, entryIndexMap) == null) {
+                        break;
+                    }
+                }
+                middlePageSum += mutableUpdate.get(mutableUpdate.size() / 2);
+            }
+        }
+
         return middlePageSum;
     }
 }
