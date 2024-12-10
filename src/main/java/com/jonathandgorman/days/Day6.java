@@ -51,7 +51,7 @@ public class Day6 {
                     int row = simulatedPosition[0];
                     int col = simulatedPosition[1];
 
-                    String positionWithDirection = row + "," + col + "," + simulatedDirection;
+                    String positionWithDirection = row + "," + col + "," + simulatedDirection; // THIS WAS THE KEY - position and direction must be considered together in order to determine if a loop is formed, not just position
                     if (positionsVisitedThisRun.contains(positionWithDirection)) {
                         loopDetected = true;
                         break;
